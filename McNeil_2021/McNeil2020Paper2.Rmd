@@ -1,0 +1,192 @@
+---
+title: "V-transform paper: part 2"
+author: "Alexander J. McNeil"
+date: "2021-01-05"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(knitr.kable.NA = '')
+```
+
+This markdown script is the second of three scripts reproducing analyses in the paper "Modelling volatile time series using v-transforms and copulas" by Alexander J.~McNeil (2021).
+
+## Libraries
+
+We need the following:
+
+```{r, echo = TRUE, warning = FALSE, message = FALSE}
+library(tscopula) # main library
+library(stats4) # for AIC
+library(xts) # for handling the time series data
+library(report) # for citations of reports
+library(rugarch) # comparison of VaR estimate with GARCH
+setMethod("logLik", "uGARCHfit", function(object) {
+  ll <- likelihood(object)
+  attr(ll, "nobs") <- object@model$modeldata$T
+  attr(ll, "df") <- length(coef(object))
+  class(ll) <- "logLik"
+  ll
+})
+```
+## Empirical v-transform
+
+We will first look at the empirical v-transform for data on daily Bitcoin log-returns for the period 2016-2019.
+
+```{r, fig.show='hold', dev.args =list(pointsize=9)}
+load("BTCUSD1619.RData")
+BTCUSD <- BTCUSD1619$`BTCUSD=X.Close` # closing values
+X <- (diff(log(BTCUSD))[-1]) * 100
+U <- strank(X)
+V <- strank(abs(X))
+plot(as.numeric(U), as.numeric(V), xlab= "u", ylab = "v", type="p")
+plot(acf(qnorm(V), plot = FALSE), ylab="ACF of z", main= " ")
+```
+
+## Fitting VT-ARMA copula models to data
+
+We use the `profilefulcrum` function to investigate different values for the fulcrum.
+
+```{r, echo=TRUE, fig.show='hold', dev.args =list(pointsize=9)}
+
+modspec1 <- vtscopula(armacopula(list(ar = 0.25)), Vlinear())
+modspec2 <- vtscopula(armacopula(list(ar = 0.95, ma = -0.85)), Vlinear())
+modspec3 <- vtscopula(armacopula(list(ar = 0.95, ma = -0.85)), V2p())
+modspec4 <- vtscopula(armacopula(list(ar = 0.95, ma = -0.85)), V3p())
+
+deltavals <- c(0, 1/11, 2/11, 3/11, seq(from = 4/11, to = 6/11, length = 50), 7/11, 8/11, 9/11, 1)
+
+tmp1 <- profilefulcrum(U, modspec1, locations = deltavals, plot = FALSE)
+tmp2 <- profilefulcrum(U, modspec2, locations = deltavals, plot = FALSE)
+tmp3 <- profilefulcrum(U, modspec3, locations = deltavals, plot = FALSE)
+tmp4 <- profilefulcrum(U, modspec4, locations = deltavals)
+
+lines(tmp1[,1], tmp1[,2], col =2)
+lines(tmp2[,1], tmp2[,2], col =3)
+lines(tmp3[,1], tmp3[,2], col =4)
+```
+
+We obtain the optimal values of the fulcrum for each v-transform and fit the corresponding models.
+
+```{R, echo = TRUE}
+delta4 <- tmp4[tmp4[,2] == max(tmp4[,2]), 1]
+delta3 <- tmp3[tmp3[,2] == max(tmp3[,2]), 1]
+delta2 <- tmp2[tmp2[,2] == max(tmp2[,2]), 1]
+delta1 <- tmp1[tmp1[,2] == max(tmp1[,2]), 1]
+
+modspec1@Vtransform@pars[1] <- as.numeric(delta1)
+modspec2@Vtransform@pars[1] <- as.numeric(delta2)
+modspec3@Vtransform@pars[1] <- as.numeric(delta3)
+modspec4@Vtransform@pars[1] <- as.numeric(delta4)
+
+tsoptions <- list(hessian = TRUE, method = "Nelder-Mead")
+vt1arma10 <- fit(modspec1, U, tsoptions = tsoptions)
+vt1arma11 <- fit(modspec2, U, tsoptions = tsoptions)
+vt2arma11 <- fit(modspec3, U, tsoptions = tsoptions)
+vt3arma11 <- fit(modspec4, U, tsoptions = tsoptions)
+
+knitr::kable(AIC(vt1arma10, vt1arma11, vt2arma11, vt3arma11), digits=3)
+vt1arma11
+```
+
+The model with linear v-transform is favoured (very slightly) by AIC. We carry out a Shapiro test on the residuals and make a number of plots.
+
+```{r, echo=TRUE, fig.show='hold', dev.args =list(pointsize=9)}
+vtcop <- vt1arma11
+
+copmod <- vtcop@tscopula
+V <- vtrans(copmod@Vtransform, U)
+resid <- kfilter(copmod@Vcopula, V)[, "resid"]
+shapiro.test(as.numeric(resid))$p.value
+
+plot(vtcop, plottype="residual")
+res <- resid(vtcop)
+acf(res)
+acf(abs(res))
+mu_t <- resid(vtcop, trace = TRUE)
+ts.plot(mu_t)
+```
+
+## Adding a parametric marginal distribution
+
+We now add parametric margins to the best VT-ARMA(1,1) copula model. 
+
+```{r, fullmodels}
+marg_st <- fit(margin("st"), X)
+marg_laplace <- fit(margin("laplace", 
+                           pars = c(mu = 0.2, scale = 1.5)), X)
+marg_dweibull <- fit(margin("doubleweibull", 
+                            pars = c(mu = 0.2, shape =0.8, scale = 2.7)), X)
+
+mod_st <- tscm(vtcop, margin = marg_st)
+mod_st <- fit(mod_st, X, method = "full", tsoptions = tsoptions)
+
+mod_laplace <- tscm(vtcop, margin = marg_laplace)
+mod_laplace <- fit(mod_laplace, X, method = "full", tsoptions = tsoptions)
+
+mod_dweibull <- tscm(vtcop, margin = marg_dweibull)
+mod_dweibull <- fit(mod_dweibull, as.numeric(X), method = "full", tsoptions = tsoptions)
+
+knitr::kable(AIC(mod_st, mod_laplace, mod_dweibull), digits = 3)
+```
+
+Graphical analyses of fitted double Weibull.
+
+```{R, echo=TRUE, fig.show='hold', dev.args =list(pointsize=9)}
+names(mod_dweibull@margin@pars) <- c("mu", "shape","scale")
+plot(mod_dweibull, plottype = "margin")
+plot(mod_dweibull, plottype = "volprofile")
+plot(mod_dweibull, plottype = "vtransform")
+plot(mod_dweibull, plottype ="volproxy")
+```
+
+Some implications of the fitted model: we estimate the change point value $\mu_T$; we also calculate the volatility response for log-return values of -10 and +10.
+
+```{R, echo=TRUE, fig.show='hold', dev.args =list(pointsize=9)}
+qmarg(mod_dweibull@margin, mod_dweibull@tscopula@Vtransform@pars[1])
+qnorm(vtrans(mod_dweibull@tscopula@Vtransform,pmarg(mod_dweibull@margin, c(-10,10))))
+```
+
+## Comparison with GARCH models
+
+We now compare the VT-ARMA models with GARCH(1,1) models using Student and GED (generalized error distribution) innovations. Note that skewed innovations do not significantly improve the fit of either GARCH model.
+
+```{R, echo = TRUE}
+garchmod_ged <- ugarchspec(variance.model = list(
+  model="sGARCH", 
+  garchOrder=c(1,1)),
+  mean.model=list(armaOrder=c(0,0),include.mean=TRUE),
+  distribution.model = "ged")
+mod_garch_ged <- ugarchfit(garchmod_ged, X)
+
+garchmod_std <- ugarchspec(variance.model = list(
+  model="sGARCH", 
+  garchOrder=c(1,1)),
+  mean.model=list(armaOrder=c(0,0),include.mean=TRUE),
+  distribution.model = "std")
+mod_garch_std <- ugarchfit(garchmod_std, X)
+
+knitr::kable(AIC(mod_st, mod_laplace, mod_dweibull, 
+    mod_garch_std, mod_garch_ged), digits=3)
+```
+## VaR calculation
+
+The plot shows a comparison of the 95\% VaR estimated by the best VT-ARMA model (red) and the best GARCH model (black).
+
+```{R, echo=TRUE, fig.show='hold', fig.width = 6, fig.height = 4, dev.args =list(pointsize=9)}
+alpha <- 0.05
+VaR <- quantile(mod_dweibull, alpha)
+VaR_alt <- quantile(mod_garch_ged, alpha)
+plot.zoo(cbind(X, VaR_alt, VaR), 
+         plot.type="single", 
+         col=c("grey","black","red"), 
+         xlab="", ylab="", type=c("h", "l", "l"))
+```
+
+
+```{R}
+cite_packages(sessionInfo())
+```

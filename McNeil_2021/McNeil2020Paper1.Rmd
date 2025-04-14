@@ -1,0 +1,135 @@
+---
+title: "V-transform paper: part 1"
+author: "Alexander J. McNeil"
+date: "2021-01-05"
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+options(knitr.kable.NA = '')
+```
+
+This markdown script is the first of three scripts reproducing analyses in the paper "Modelling volatile time series using v-transforms and copulas" by Alexander J.~McNeil (2020).
+
+## Libraries
+
+We need the following:
+
+```{r, echo = TRUE, warning = FALSE, message = FALSE}
+library(tscopula) # main library
+library(pBrackets) # add brackets to a plot
+library(report) # for citations of reports
+```
+
+
+## A symmetric VT-ARMA process
+
+We specifiy a t distribution for the margin, a symmetric v-transform, a VT-ARMA(1,1) copula process and a VT-ARMA(1,1) process in the following way:
+
+```{r, echo = TRUE}
+margmod <- margin("st", pars = c(df = 3, mu = 0, sigma = 1))
+vt <- Vsymmetric()
+cop_arma <- armacopula(list(ar = 0.95, ma = -0.85))
+cop_vtarma <- vtscopula(cop_arma, Vtransform = vt)
+vtarma11 <- tscm(cop_vtarma, margmod)
+```
+
+We will generate realizations of the $(X_t)$, $(U_t)$, $(V_t)$ and $(Z_t)$ processes.
+
+```{r, echo = TRUE}
+set.seed(199)
+Xsim <- sim(vtarma11, n = 500) 
+Usim <- pmarg(margmod, Xsim)
+Vsim <- vtrans(vt, Usim)
+Zsim <- qnorm(Vsim)
+```
+
+
+Now we plot $(X_t)$ and $(Z_t)$ along with the acf of $(X_t)$ and $(|X_t|)$.
+```{r, fig.show='hold', dev.args =list(pointsize=9)}
+ts.plot(Xsim, type="h", ylab=expression(X[t]))
+ts.plot(Zsim, type="h", ylab=expression(Z[t]))
+plot(acf(Xsim, plot = FALSE), xlab="k", 
+     ylab = expression(rho(X[t],X[t+k])), main="", cex =0.5)
+plot(acf(abs(Xsim), plot = FALSE), xlab="k", 
+     ylab = expression(rho(abs(X[t]),abs(X[t+k]))), main="")
+```
+
+
+## Visualizing a v-transform
+
+The following code gives a picture of a 3-parameter v-transform and annotates it to illustrate the square property and show how stochastic inversion works.
+
+```{r, echo=TRUE, fig.width = 4.7, fig.height = 5, fig.show='hold', dev.args =list(pointsize=9)}
+V <- V3p(delta = 0.55, kappa = 1.4, xi = 0.65)
+plot(V)
+upt <- 0.285
+vpt <- vtrans(V, upt)
+udual <- vinverse(V, vpt) + vpt
+abline(h = vpt, lty =2)
+lines(c(upt,upt), c(-0.05, vpt), lty=2)
+lines(c(udual, udual), c(-0.05, vpt), lty=2)
+axis(2, at = vpt, "v")
+axis(1, at = upt, expression(u))
+axis(1, at = udual, expression(paste(u,"*")))
+axis(1, at = 0.55, expression(delta))
+brackets(upt, vpt+0.01, udual, vpt+0.01, type=1)
+text(upt+vpt/2, vpt+0.075, "v")
+```
+
+## A model with asymmetric v-transform
+
+This time we create and simulate a model with an asymmetric v-transform.
+
+```{r, echo=TRUE}
+margmod <- margin("sst", c(df=3, gamma=0.8, mu=0.3, sigma=1.0))
+downprob <- pmarg(margmod, 0)
+cop_arma <- armacopula(list(ar = 0.95, ma = -0.85))
+vt <- V3p(delta = downprob, kappa = 0.9, xi = 1.1)
+cop_vtarma <- vtscopula(cop_arma, Vtransform = vt)
+vtarma11 <- tscm(cop_vtarma, margmod)
+```
+
+
+```{r, echo=TRUE}
+n <- 500
+set.seed(9)
+Xsim <- sim(vtarma11, n)
+Usim <- pmarg(margmod, Xsim)
+Vsim <- vtrans(vt, Usim)
+```
+
+We plot both $(X_t)$ and $(Z_t)$ (in red). On the latter we superimpose $(\mu_t)$ calculated using the Kalman filter and draw lines to indicate high and low levels of the conditional mean.
+
+```{r, echo=TRUE, fig.show='hold', dev.args =list(pointsize=9)}
+ts.plot(Xsim, type="h", ylab=expression(X[t]))
+ts.plot(qnorm(Vsim), type="h", ylab=expression(Z[t]), col = 2)
+kf <- kfilter(cop_arma, Vsim)
+lines(kf[,"mu_t"])
+mu_t_1 <- 0.5
+mu_t_2 <- -0.5
+abline(h=mu_t_1)
+abline(h=mu_t_2)
+```
+
+Let's look at the conditional densities when $\mu_t$ takes the values indicated by the two horizontal lines. The left picture shows a high volatility situation (bimodal) and the right picture a low volatility situation.
+
+```{r, echo=TRUE, fig.show='hold', dev.args =list(pointsize=9), results='asis'}
+x <- seq(from=-7, to=5, length=1000)
+sigmaeps <- sigmastarma(cop_arma)
+y1 <- tscopula:::dcondvtarma(x, vtarma11, mu_t_1, sigmaeps)
+y2 <- tscopula:::dcondvtarma(x, vtarma11, mu_t_2, sigmaeps)
+y0 <- tscopula:::dcondvtarma(x, vtarma11, 0, 1)
+plot(x, y1, type="l", ylim = range(y1, y0), ylab = "density")
+lines(x, y0, lty=2)
+plot(x, y2, type="l", ylim = range(y2, y0), ylab = "density")
+lines(x, y0, lty=2)
+```
+
+
+```{R}
+cite_packages(sessionInfo())
+```
