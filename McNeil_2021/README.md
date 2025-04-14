@@ -2,7 +2,7 @@
 
 Code and data for the paper:
 
-McNeil, A.J. (2021). Modelling volatile time series with v-transforms and copulas. Risks, 9(14). https://www.mdpi.com/2227-9091/9/1/14
+McNeil, A.J. (2021). [Modelling volatile time series with v-transforms and copulas](https://www.mdpi.com/2227-9091/9/1/14). Risks, 9(14). 
 
 ### Note
 
