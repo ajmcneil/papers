@@ -1,6 +1,6 @@
 require(skewt)
 require(fitdistrplus)
-source("Section2_functions.R")
+source("ARCH-GARCH_functions.R")
 
 alpha0 <- 0.1
 alpha1 <- 0.3

@@ -1,5 +1,5 @@
 require(skewt)
-source("Section2_functions.R")
+source("ARCH-GARCH_functions.R")
 
 # ARCH(1) parameters
 ARCHpars <- c(0.4, 0.6, 0)
