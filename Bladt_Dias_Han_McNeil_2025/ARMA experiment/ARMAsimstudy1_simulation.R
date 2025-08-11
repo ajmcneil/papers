@@ -1,7 +1,7 @@
 library(tscopula)
 library(parallel)
 library(pbmcapply)
-numberOfCores <- detectCores()
+numberOfCores <- detectCores()-1
 
 # selection of nice ARMA model
 select_armapar <- function(tol1= 0.15, 
