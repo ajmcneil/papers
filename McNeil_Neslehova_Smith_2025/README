@@ -1,3 +1,5 @@
 Code for the paper:
 
 McNeil, A.J. and Neslehova, J.G. and Smith, A.D. (2025). Measures and Models of Non-Monotonic Dependence.
+
+To run the code you need the basiscor package which is available here: https://github.com/ajmcneil/basiscor.
