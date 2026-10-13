@@ -103,13 +103,11 @@ xvals <- seq(from = -3.5, to = 3.5, length=ngrid)
 output <- outer(xvals, xvals, jointdens)
 sum(output)*diff(xvals)[1]^2
 # Joint density of (X_{t-1}, X_{t})
-#pdf("xdensity_GARCH_Gauss.pdf")
 par(pty="s")
 contour(xvals, xvals, output, nlevels=60)
 abline(0,1, lty=2)
 abline(h=0, lty=3)
 abline(v=0, lty = 3)
-#dev.off()
 
 # Find marginal density
 margdens <- function(x){
@@ -160,13 +158,12 @@ fxvals <- margdens(xvals)
 numerator <- outer(xvals,xvals,jointdens)
 denominator <- outer(fxvals,fxvals)
 
-#pdf("density_GARCH_Gauss.pdf")
 par(pty="s")
 contour(u, v, numerator/denominator, nlevels = 70, asp=1)
 abline(0,1,lty=2)
 abline(h = 0.5, lty=3)
 abline(v = 0.5, lty=3)
-#dev.off()
+
 
 sum(numerator/denominator)*0.01^2
 sum(abs(numerator/denominator -1))*0.01^2
@@ -383,13 +380,11 @@ fyvals <- conddens(zval,yvals,margin=1)
 denominator <- outer(fxvals,fyvals)
 cop <- numerator/denominator
 sum(cop)*diff(u)[1]^2
-#pdf("density_GARCH_Gauss_cond_quartile.pdf")
 par(pty="s")
 contour(u, v, cop, nlevels = 70, asp=1)
 abline(0,1,lty=2)
 abline(h = 0.5, lty=3)
 abline(v = 0.5, lty=3)
-#dev.off()
 sum(cop)*diff(u)[1]^2
 sum(abs(cop -1))*diff(u)[1]^2
 
@@ -407,13 +402,11 @@ fyvals <- conddens(zval,yvals,margin=1)
 denominator <- outer(fxvals,fyvals)
 cop <- numerator/denominator
 sum(cop)*diff(u)[1]^2
-#pdf("density_GARCH_Gauss_cond_median.pdf")
 par(pty="s")
 contour(u, v, cop, nlevels = 70, asp=1)
 abline(0,1,lty=2)
 abline(h = 0.5, lty=3)
 abline(v = 0.5, lty=3)
-#dev.off()
 sum(cop)*diff(u)[1]^2
 sum(abs(cop -1))*diff(u)[1]^2
 

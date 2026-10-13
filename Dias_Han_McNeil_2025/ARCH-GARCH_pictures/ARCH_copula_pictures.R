@@ -38,13 +38,11 @@ conddens <- outer(xvals,xvals,conddensARCHnorm, pars = ARCHpars)
 margdens <- outer(fx_table(xvals, marg_norm$table), rep(1,ngrid))
 jointdens <- conddens*margdens
 # Joint density of (X_{t-1}, X_{t})
-#pdf("xdensity_ARCH_Gauss.pdf")
 par(pty="s")
 contour(xvals,xvals,jointdens, nlevels=30)
 abline(0,1, lty=2)
 abline(h=0, lty=3)
 abline(v=0, lty = 3)
-#dev.off()
 
 # copula density picture
 uvals <- seq(from = 1/(ngrid+1), to = ngrid/(ngrid+1), length = ngrid)
@@ -58,13 +56,11 @@ sum(copdens)/ngrid^2
 apply(copdens,1,sum)/ngrid
 sum(abs(copdens -1))/ngrid^2
 # numerical integration is imprecise in corners
-#pdf("density_ARCH_Gauss.pdf")
 par(pty="s")
 contour(uvals, uvals, copdens, nlevels = 50)
 abline(0,1,lty=2)
 abline(v=0.5, lty=3)
 abline(h=0.5, lty=3)
-#dev.off()
 
 #####################################################
 # Absolute ARCH(1) normal innovations 
@@ -86,11 +82,9 @@ conddens <- 2*outer(xvals,xvals,conddensARCHnorm, pars = ARCHpars)
 margdens <- outer(fx_table(xvals, marg_absnorm$table), rep(1,ngrid))
 jointdens <- conddens*margdens
 # Joint density of (X_{t-1}, X_{t})
-#pdf("xdensity_ARCH_Gauss_abs.pdf")
 par(pty="s")
 contour(xvals,xvals,jointdens, nlevels=30)
 abline(0,1, lty=2)
-#dev.off()
 
 # copula density picture
 ngrid = 99
@@ -105,11 +99,9 @@ copdens <- numerator/denominator
 sum(copdens)/ngrid^2
 apply(copdens,1,sum)/ngrid
 # numerical integration is imprecise in corners
-#pdf("density_ARCH_Gauss_abs.pdf")
 par(pty="s")
 contour(uvals, uvals, copdens, nlevels = 100)
 abline(0,1,lty=2)
-#dev.off()
 
 #####################################################
 # ARCH(1) with t4 innovations
@@ -134,13 +126,11 @@ conddens <- outer(xvals,xvals,conddensARCHt, pars = ARCHpars, innovpars = nuA)
 margdens <- outer(fx_table(xvals, marg_t4$table), rep(1,ngrid))
 jointdens <- conddens*margdens
 # Joint density of (X_{t-1}, X_{t})
-#pdf("xdensity_ARCH_t4.pdf")
 par(pty="s")
 contour(xvals,xvals,jointdens, nlevels=30)
 abline(0,1, lty=2)
 abline(h=0, lty=3)
 abline(v=0, lty = 3)
-#dev.off()
 
 # copula density picture
 uvals <- seq(from = 1/(ngrid+1), to = ngrid/(ngrid+1), length = ngrid)
@@ -154,13 +144,11 @@ sum(copdens)/ngrid^2
 apply(copdens,1,sum)/ngrid
 sum(abs(copdens -1))/ngrid^2
 # numerical integration is imprecise in corners
-#pdf("density_ARCH_t4.pdf")
 par(pty="s")
 contour(uvals, uvals, copdens, nlevels = 50)
 abline(0,1,lty=2)
 abline(v=0.5, lty=3)
 abline(h=0.5, lty=3)
-#dev.off()
 
 #####################################################
 # ARCH(1) with t2.5 innovations
@@ -185,13 +173,11 @@ conddens <- outer(xvals,xvals,conddensARCHt, pars = ARCHpars, innovpars = nuB)
 margdens <- outer(fx_table(xvals, marg_t2.5$table), rep(1,ngrid))
 jointdens <- conddens*margdens
 # Joint density of (X_{t-1}, X_{t})
-#pdf("xdensity_ARCH_t2point5.pdf")
 par(pty="s")
 contour(xvals,xvals,jointdens, nlevels=60)
 abline(0,1, lty=2)
 abline(h=0, lty=3)
 abline(v=0, lty = 3)
-#dev.off()
 
 # copula density picture
 uvals <- seq(from = 1/(ngrid+1), to = ngrid/(ngrid+1), length = ngrid)
@@ -205,13 +191,11 @@ sum(copdens)/ngrid^2
 apply(copdens,1,sum)/ngrid
 sum(abs(copdens -1))/ngrid^2
 # numerical integration is imprecise in corners
-#pdf("density_ARCH_t2point5.pdf")
 par(pty="s")
 contour(uvals, uvals, copdens, nlevels = 50)
 abline(0,1,lty=2)
 abline(v=0.5, lty=3)
 abline(h=0.5, lty=3)
-#dev.off()
 
 #####################################################
 # ARCH(1) Gaussian innovations and leverage
@@ -236,13 +220,11 @@ conddens <- outer(xvals,xvals,conddensARCHnorm, pars = ARCHlevpars, levpar = lev
 margdens <- outer(fx_table(xvals, marg_norm_lev$table), rep(1,ngrid))
 jointdens <- conddens*margdens
 # Joint density of (X_{t-1}, X_{t})
-#pdf("xdensity_ARCH_Gauss_leverage.pdf")
 par(pty="s")
 contour(xvals,xvals,jointdens, nlevels=30)
 abline(0,1, lty=2)
 abline(h=0, lty=3)
 abline(v=0, lty = 3)
-#dev.off()
 
 # copula density picture
 uvals <- seq(from = 1/(ngrid+1), to = ngrid/(ngrid+1), length = ngrid)
@@ -255,11 +237,9 @@ copdens <- numerator/denominator
 sum(copdens)/ngrid^2
 apply(copdens,1,sum)/ngrid
 # numerical integration is imprecise in corners
-#pdf("density_ARCH_Gauss_leverage.pdf")
 par(pty="s")
 contour(uvals, uvals, copdens, nlevels = 50)
 abline(h=0.5, lty=3)
-#dev.off()
 
 #####################################################
 # ARCH(1) scaled skewed Student t innovations 
@@ -284,10 +264,8 @@ conddens <- outer(xvals,xvals,conddensARCHskewt, pars = ARCHpars, levpar =0, inn
 margdens <- outer(fx_table(xvals, marg_skewt$table), rep(1,ngrid))
 jointdens <- conddens*margdens
 # Joint density of (X_{t-1}, X_{t})
-#pdf("xdensity_ARCH_skewt4.pdf")
 par(pty="s")
 contour(xvals,xvals,jointdens, nlevels=30)
-#dev.off()
 
 # copula density picture
 uvals <- seq(from = 1/(ngrid+1), to = ngrid/(ngrid+1), length = ngrid)
@@ -300,10 +278,8 @@ copdens <- numerator/denominator
 sum(copdens)/ngrid^2
 apply(copdens,1,sum)/ngrid
 # numerical integration is imprecise in corners
-#pdf("density_ARCH_skewt4.pdf")
 par(pty="s")
 contour(uvals, uvals, copdens, nlevels = 50)
-#dev.off()
 
 #####################################################
 # AR(1) - ARCH(1) normal innovations 
@@ -328,11 +304,9 @@ conddens <- outer(xvals,xvals,conddensARCHnorm, pars = ARCHpars, levpar = 0, mea
 margdens <- outer(fx_table(xvals, marg_norm_ar1$table), rep(1,ngrid))
 jointdens <- conddens*margdens
 # Joint density of (X_{t-1}, X_{t})
-#pdf("xdensity_AR_ARCH_Gauss.pdf")
 par(pty="s")
 contour(xvals,xvals,jointdens, nlevels=30)
 abline(0,1, lty=2)
-#dev.off()
 
 # copula density picture
 uvals <- seq(from = 1/(ngrid+1), to = ngrid/(ngrid+1), length = ngrid)
@@ -345,10 +319,8 @@ copdens <- numerator/denominator
 sum(copdens)/ngrid^2
 apply(copdens,1,sum)/ngrid
 # numerical integration is imprecise in corners
-#pdf("density_AR_ARCH_Gauss.pdf")
 par(pty="s")
 contour(uvals, uvals, copdens, nlevels = 50)
 abline(0,1, lty=2)
-#dev.off()
 
 
