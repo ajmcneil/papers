@@ -41,12 +41,10 @@ wm <- 2 * apply(pcint, c(1, 3), sum) # sums over cell2 (Z2)
 wm1 <- wm[1, ][u < 0.5] # (Z1 < 0.5)
 wm2 <- wm[2, ][u > 0.5] # (Z1 > 0.5)
 
-pdf("margdens.pdf")
 par(mfrow=c(1,1),cex=1.5)
 plot(NULL, xlim = c(0,1), ylim = c(0,2), xlab = "u", ylab = expression(omega[1](u)))
 lines(u1, wm1)
 lines(u2, wm2)
-dev.off()
 
 ##############################################################
 #### Multinomial probability function
@@ -121,18 +119,11 @@ p4 <- levelplot(z4,
                   y = list(at = seq(0, 1, 0.2))
                 ),
                 par.settings = ps)
-pdf("levelQ1.pdf", width=5, height=5)
+
 plot(p1)
-dev.off()
-pdf("levelQ2.pdf", width=5, height=5)
 plot(p2)
-dev.off()
-pdf("levelQ3.pdf", width=5, height=5)
 plot(p3)
-dev.off()
-pdf("levelQ4.pdf", width=5, height=5)
 plot(p4)
-dev.off()
 
 ###################################################################
 #### Marginal multinomial probabilities (1)
@@ -144,7 +135,6 @@ F2 <- F1 + pc[1,2,]
 F3 <- F2 + pc[2,1,]
 F4 <- F3 + pc[2,2,]
 
-pdf("quadplot1.pdf", width = 5, height = 5)
 par(mfrow=c(1,1))
 plot(v, F1,
      type = "n",
@@ -191,7 +181,6 @@ F2 <- F1 + pc[2,1,]
 F3 <- F2 + pc[1,2,]
 F4 <- F3 + pc[2,2,]
 
-pdf("quadplot1.pdf", width = 5, height = 5)
 par(mfrow=c(1,1))
 plot(v, F1,
      type = "n",
@@ -226,5 +215,4 @@ legend(x=0.8, y=1,,
                   expression(Q[4])),
        fill = cols,
        bty = "n")
-dev.off()
 
