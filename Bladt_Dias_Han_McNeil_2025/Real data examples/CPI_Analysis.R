@@ -37,6 +37,7 @@ auto.arima(qnorm(strank(Xtrain)), stepwise=FALSE, approximation=FALSE)
 
 # same model fitted with tscopula for later purposes
 # fully Gaussian base model for reference
+copmod <- sarmacopula(list(ar=0, ma = c(0,0), sar =0))
 basemod2 <- tscm(copmod, margin("gauss0"))
 (basemod2 <- fit(basemod2, Xtrain, method = "full"))
 AIC(basemod, basemod2) 
@@ -44,7 +45,6 @@ AIC(basemod, basemod2)
 # STAGE B: Gaussian semiparametric model
 
 U <- strank(Xtrain)
-copmod <- sarmacopula(pars = list(ar = 0, ma = c(0, 0), sar = 0))
 (modG <- fit(copmod, U))
 modG <- fit(modG, U, tsoptions = list(hessian = TRUE))
 modG
@@ -85,7 +85,7 @@ margmod <- fit(margin("st"), Xtrain)
 plot(margmod)
 U <- pmarg(bestmargin, Xtrain)
 copmod <- sarmacopula(pars = list(ar = 0, ma = c(0, 0), sar = 0))
-(copPG <- fit(copPG, U, tsoptions = list(hessian = TRUE)))
+(copPG <- fit(copmod, U, tsoptions = list(hessian = TRUE)))
 AIC(copPG)
 BIC(copPG)
 
@@ -151,13 +151,20 @@ P_G_pits <- SP_NG_pits
 P_NG_pits <- SP_NG_pits
 P_base_pits <- SP_NG_pits
 
+# compute quantile scores
+quantile_score <- function(alpha, quants, forecast){
+  weights <- ifelse(forecast <= quants, 1-alpha, alpha)
+  weights*abs(forecast - quants)
+}
+
 xdata <- Xtrain
+basemod2_tscm <- tscm(basemod2@tscopula, basemod2@margin)
 for (k in 1:length(newdata)){
   xquant_SP_NG <- quantile(xdata, predict(modNG@tscopula, data = strank(xdata), x = alpha, type = "qf"))
   xquant_SP_G <- quantile(xdata, predict(modG@tscopula, data = strank(xdata), x = alpha, type = "qf"))
   xquant_P_G <- predict(modPG, data = xdata, x = alpha, type = "qf")
   xquant_P_NG <- predict(modPNG, data = xdata, x = alpha, type = "qf")
-  xquant_P_base <- predict(basemod2, x = alpha, type = "qf")
+  xquant_P_base <- predict(basemod2_tscm, data = xdata, x = alpha, type = "qf")
   SP_NG_scores[k,] <- quantile_score(alpha, xquant_SP_NG, newdata[k])
   SP_G_scores[k,] <- quantile_score(alpha, xquant_SP_G, newdata[k])
   P_NG_scores[k,] <- quantile_score(alpha, xquant_P_NG, newdata[k])
